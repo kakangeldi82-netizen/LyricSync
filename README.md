@@ -1,107 +1,102 @@
-🎤 LyricSync
-LyricSync, bilgisayarında tamamen lokal (çevrimdışı) çalışan, Spotify ve YouTube Music tarzında kelime kelime (word-by-word) akan bir karaoke ve şarkı sözü uygulamasıdır.
+# 🎤 LyricSync
 
-Tek yapman gereken bir müzik dosyası yüklemek ve şarkının düz metin (zaman damgasız) sözlerini yapıştırmak. Gerisini arkaplanda yapay zeka sizin için halleder!
+**Local, desktop karaoke lyrics application.** Input a song alongside plain (timestamp-free) lyrics text, and it uses Whisper-based local audio analysis to detect when every word is spoken—displaying them with Spotify/YouTube Music style word-by-word highlight animations.
 
-💡 Çalışma Mantığı (Nasıl Çalışır?)
-LyricSync, zaman damgası olmayan standart şarkı sözlerini müzikle milisaniyelik hassasiyetle hizalamak için 4 adımlı akıllı bir sistem kullanır:
+---
 
-Yapay Zeka ile Ses Dinleme (Transkripsiyon):
-Arka planda çalışan faster-whisper yapay zeka modeli şarkıyı dinler ve duyduğu kelimeleri tahmini zaman damgalarıyla (hangi saniyede söylendiği bilgisiyle) çıkarır.
+## Table of Contents
 
-Akıllı Metin Eşleştirme:
-Müzikteki arkavokal, enstrüman veya telaffuz farklılıkları nedeniyle yapay zeka bazı kelimeleri yanlış duyabilir. LyricSync, yapay zekanın duyduğu metin ile senin girdiğin gerçek sözleri sırasıyla karşılaştırır. Zamanlamaları alır ve senin %100 doğru metnine aktarır.
+- [How It Works](#how-it-works)
+- [Installation](#installation)
+- [How to Run](#how-to-run)
+- [Settings & Customization](#settings--customization)
+- [Project Structure](#project-structure)
 
-Pürüzsüz Zaman Tamamlama (İnterpolasyon):
-Arada duyulamayan veya eşleşmeyen kelimeler varsa, sistem bunları yok saymaz. İki bilinen zaman damgası arasında matematiksel olarak orantılı dağıtarak akışı bozmaz.
+---
 
-Hızlı Önbellek (Cache) Sistemi:
-Analiz bittiğinde sonuçlar ~/.lyricsync_cache/ klasörüne küçük bir JSON dosyası olarak kaydedilir. Aynı şarkıyı tekrar açtığında saniyeler süren analiz beklenmez, şarkı anında hazır olur.
+## How It Works
 
-🛠️ Kurulum ve Hazırlık
-Projeyi bilgisayarında çalıştırmak için aşağıdaki adımları sırasıyla uygulayabilirsin.
+1. **AI Audio Analysis:** `faster-whisper` transcribes the track and extracts word-level timestamps.
+2. **Smart Sequence Matching:** The words *heard* by Whisper (even if misheard) are matched sequentially against your *actual* provided lyrics using `difflib`—transferring precise timing to your correct text.
+3. **Smooth Interpolation:** Unmatched gaps or silent periods are filled using mathematical interpolation between neighboring timestamps.
+4. **Local Caching:** Results are saved as JSON files in `~/.lyricsync_cache/`. Opening the same song again loads instantly without needing re-analysis.
 
-1. Ön Gereksinim: FFmpeg Kurulumu
-faster-whisper ses dosyalarını işleyebilmek için sisteminde FFmpeg aracının kurulu olmasına ihtiyaç duyar.
+---
 
-Windows: Komut satırına (CMD veya PowerShell) winget install ffmpeg yazarak kurabilirsin.
+## Installation
 
-macOS: Terminale brew install ffmpeg yazarak kurabilirsin.
+### 1. Prerequisites
 
-Linux (Ubuntu/Debian): Terminale sudo apt install ffmpeg yazarak kurabilirsin.
+`faster-whisper` requires **FFmpeg** installed on your system for audio processing:
 
-2. Projeyi Bilgisayara İndirme
-Projeyi bilgisayarına iki farklı yöntemle indirebilirsin:
+- **Windows:** `winget install ffmpeg` (or add to your system `PATH`)
+- **macOS:** `brew install ffmpeg`
+- **Linux:** `sudo apt install ffmpeg`
 
-Yöntem A: Git Kullanarak (Önerilen)
-Terminal veya Komut İstemi'ni açıp şu komutu çalıştırın:
+### 2. Getting the Code
 
-Bash
-git clone https://github.com/kullaniciadi/lyricsync.git
+You can either clone the repository using Git or download it as a ZIP archive:
+
+#### **Option A: Clone with Git (Recommended)**
+```bash
+git clone [https://github.com/your-username/lyricsync.git](https://github.com/your-username/lyricsync.git)
 cd lyricsync
-Yöntem B: ZIP Olarak İndirme
-GitHub sayfasındaki yeşil Code butonuna tıkla ve Download ZIP seçeneğini seç.
+Option B: Download ZIP
+Click the green Code button on GitHub and select Download ZIP.
 
-İnen ZIP dosyasını bilgisayarında bir klasöre çıkar.
+Extract the archive to your desired location.
 
-Terminal / Komut İstemi'ni açıp bu klasörün içine gir:
-
-Bash
-cd klasorun/yolu/lyricsync
-3. Python Ortamını Kurma ve Çalıştırma
-Projeyi çalıştırmadan önce bağımlılıkların sistemindeki diğer projelerle karışmaması için sanal bir ortam (venv) oluşturman önerilir:
+Open your terminal/command prompt and navigate into the extracted folder:
 
 Bash
-# 1. Sanal ortamı oluşturun
+cd path/to/lyricsync
+3. Setup Virtual Environment
+Bash
+# Create virtual environment
 python -m venv venv
 
-# 2. Sanal ortamı aktif edin
-# Windows için:
+# Activate virtual environment
+# Windows:
 venv\Scripts\activate
-# macOS / Linux için:
+# macOS/Linux:
 source venv/bin/activate
 
-# 3. Gerekli kütüphaneleri yükleyin
+# Install dependencies
 pip install -r requirements.txt
-Arayüz Uyarısı: İlk çalıştırmada yapay zeka modeli (small modeli, yaklaşık ~500 MB) otomatik olarak indirilir. Bu işlem internet hızına bağlı olarak ilk seferde biraz zaman alabilir. Sonraki çalıştırmalarda internet bağlantısı gerekmez.
+Note: On first launch, the Whisper model (small, ~500MB) will automatically be downloaded to ~/.cache/huggingface. An internet connection is required for this step; subsequent runs operate completely offline locally.
 
-🚀 Kullanım Adımları
-Terminalde python main.py komutuyla uygulamayı başlat.
+How to Run
+Bash
+python main.py
+Workflow:
+🎵 Open Song — Select an audio file (.mp3, .wav, .m4a, .flac, .ogg).
 
-🎵 Şarkı Aç: Desteklenen formatlardan biriyle (.mp3, .wav, .m4a, .flac, .ogg) şarkını seç.
+📝 Enter Lyrics — Paste the plain text line-by-line (no timestamps needed, they will be auto-generated).
 
-📝 Sözleri Gir: Şarkının sözlerini zaman damgası olmadan, doğrudan satır satır yapıştır.
+✨ Align — Click to let Whisper analyze the track (takes 10–60 seconds on CPU depending on song duration).
 
-✨ Hizala: "Hizala" butonuna bas. İşlem bilgisayarının gücüne ve şarkı süresine bağlı olarak 10-60 saniye sürebilir.
+▶️ Play — Enjoy word-by-word animated highlights as the active line automatically centers itself.
 
-▶️ Oynat: Şarkı çalmaya başladığında sözler kelime kelime parlayarak (highlight) akar ve aktif satır ekranın ortasında odak kalır.
+Settings & Customization
+Speed/Accuracy Balance: Modify model_size in core/aligner.py ("tiny", "base", "small", "medium", "large-v3"). If you have a supported GPU, set device="cuda" for drastic speed improvements.
 
-⚙️ İpuçları ve Özelleştirme
-Hız ve Doğruluk Dengesi:
+Custom Themes: Customize text colors (ACTIVE_COLOR, SUNG_COLOR, DIM_COLOR) inside ui/karaoke_view.py.
 
-core/aligner.py dosyasındaki model_size ayarını daha hızlı işlem için "tiny" veya "base", daha yüksek doğruluk için "medium" veya "large-v3" yapabilirsin. (Ekran kartın destekliyorsa device="cuda" parametresiyle analizi saniyelere düşürebilirsin).
+Cache Management: To reset or re-align a song, simply delete its corresponding .json file inside the ~/.lyricsync_cache/ directory and click Align again in the application.
 
-Tema ve Renkler:
-
-ui/karaoke_view.py içerisindeki renk kodlarını (ACTIVE_COLOR, SUNG_COLOR, DIM_COLOR) değiştirerek kendi görsel temanı oluşturabilirsin.
-
-Önbelleği Temizleme:
-
-Bir şarkının sözlerini değiştirmek veya yeniden hizalamak istersen, ~/.lyricsync_cache/ klasöründeki ilgili .json dosyasını silip uygulamada tekrar "Hizala" butonuna basman yeterlidir.
-
-📂 Proje Yapısı
+Project Structure
 Plaintext
 lyricsync/
-├── main.py             # Uygulamanın giriş noktası
+├── main.py             # Entry point, connects all UI components
 ├── core/
-│   ├── lyrics_model.py # Kelime, satır ve şarkı veri yapıları
-│   ├── aligner.py      # Yapay zeka + metin eşleştirme motoru
-│   ├── align_worker.py # Hizalama işlemini arka planda takılmadan çalıştıran izlek
-│   └── cache.py        # Hizalanmış verileri bilgisayara kaydetme/yükleme
+│   ├── lyrics_model.py # Data structures for Word / Line / Song models
+│   ├── aligner.py      # Whisper + difflib alignment engine
+│   ├── align_worker.py # Executes alignment tasks off the UI thread (QThread)
+│   └── cache.py        # Handles JSON caching of aligned song data
 └── ui/
-    ├── main_window.py  # Ana pencere ve bileşen yönetimi
-    ├── karaoke_view.py # Kelime kelime renklendirme ve kaydırma ekranı
-    ├── controls.py     # Oynat, duraklat, ses ve zaman çubuğu
-    ├── lyrics_dialog.py# Düz metin söz giriş penceresi
-    ├── flow_layout.py  # Kelimeleri ekrana esnek dizen layout
-    └── styles.py       # Koyu ve cam efektli (glassmorphism) arayüz stilleri
+    ├── main_window.py  # Main window interface
+    ├── karaoke_view.py # Word-by-word highlights & auto-scroll viewport
+    ├── controls.py     # Play/pause, seeking, and volume controls
+    ├── lyrics_dialog.py# Plain text lyrics input modal
+    ├── flow_layout.py  # Flow layout manager for arranging word elements
+    └── styles.py       # Dark theme & glassmorphism QSS styling
